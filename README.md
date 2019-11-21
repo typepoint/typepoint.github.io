@@ -18,9 +18,7 @@ If you're developing a client & server app both in TypeScript, you can leverage 
 First we need to install the following packages:
 
 ```shell
-npm add @typepoint/shared
-npm add @typepoint/server
-npm add @typepoint/client
+npm add @typepoint/client @typepoint/server @typepoint/shared @typepoint/express
 ```
 
 ### Endpoint Definitions
@@ -30,7 +28,7 @@ We start by defining an endpoint in a shared folder. Our example will define an 
 <p class="filename" data-filename="./shared/endpoints/getTodoEndpoint.ts"></p>
 
 ```typescript
-import { defineEndpoint } from '@typepoint/shared';
+import { defineEndpoint, Empty } from '@typepoint/shared';
 
 export interface Todo {
   id: string;
