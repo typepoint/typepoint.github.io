@@ -60,11 +60,11 @@ Next, let's create a handler for our endpoint in our server.
 <p class="filename" data-filename="./server/todos/getTodoHandler.ts"></p>
 
 ```typescript
-import { defineHandler } from '@typepoint/server';
+import { createHandler } from '@typepoint/server';
 import { getTodoEndpoint } from '../../shared/endpoints/getTodoHandler';
 import { getTodoById } from './todoService';
 
-export const getTodoHandler = defineHandler(getTodoEndpoint, async ({ request, response }) => {
+export const getTodoHandler = createHandler(getTodoEndpoint, async ({ request, response }) => {
   // Get todo from our async todo service and put it in our response body
   response.body = await getTodoById(request.params.id);
 });
