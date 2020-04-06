@@ -40,7 +40,7 @@ export interface GetTodoRequestParams {
   id: string;
 }
 
-export const getTodoEndpoint = defineEndpoint<GetTodoRequestParams, Empty, Todo[]>(path =>
+export const getTodoEndpoint = defineEndpoint<GetTodoRequestParams, Empty, Todo[]>((path) =>
   path.literal('/api/todos/').param('id'),
 );
 ```
@@ -136,21 +136,165 @@ Now we have our `TypePointClient` created, we can use it anywhere in our front-e
 import { client } from './typepoint';
 import { getTodoEndpoint } from '../shared/endpoints/getTodoEndpoint';
 
-const todo = await client.fetch(getTodoEndpoint {
-  params: {
-    id: '1'
-  }
+async function showTodo() {
+  const response = await client.fetch(getTodoEndpoint, {
+    params: {
+      id: '1',
+    },
+  });
+
+  const todo = response.body;
+
+  alert(todo.title);
+}
+```
+
+The above client side code is completely typed. Trying to fetch from the getTodoEndpoint without passing the a string id as a param will cause a design/compile-time error. The response is also completely typed.
+
+## React Hooks
+
+The `@typepoint/react` library provides react hooks to call your endpoints.
+
+### Install
+
+```shell
+npm add @typepoint/react
+```
+
+### TypePoint Provider
+
+Before you can start using TypePoint React hooks, you'll need to wrap your root component with a `TypePointProvider`. This provides the `client` that the hooks will use.
+
+<p class="filename" data-filename="./index.tsx"></p>
+
+```tsx
+import * as React from 'react';
+import * as ReactDOM from 'react-dom';
+import { TypePointClient } from '@typepoint/client';
+import { TypePointProvider } from '@typepoint/react';
+import { App } from './app';
+
+const client = new TypePointClient({
+  // Path to API server, normally this will be an environment variable
+  server: 'http://localhost:3001',
 });
 
-alert(todo.title);
+export const AppWithProviders = React.memo(() => (
+  <TypePointProvider client={client}>
+    <App />
+  </TypePointProvider>
+));
+
+const root = window.document.getElementById('root');
+
+ReactDOM.render(<AppWithProviders />, root);
+```
+
+### useEndpoint hook
+
+`useEndpoint` is a hook that immediately fetches a given endpoint with the given `params` and or `body`.
+
+<p class="filename" data-filename="./app.tsx"></p>
+
+```tsx
+import React from 'react';
+import { useEndpoint } from '@typepoint/react';
+import { getTodosEndpoint } from '../shared/endpoints/getTodosEndpoint';
+
+const TodoApp = () => {
+  const { response } = useEndpoint(getTodosEndpoint, {});
+  const todos = response?.body ?? [];
+
+  return (
+    <ul>
+      {todos.map((todo) => (
+        <li key={todo.id}>{todo.title}</li>
+      ))}
+    </ul>
+  );
+};
+
+export default TodoApp;
+```
+
+The endpoint will not be fetched unnecessarily, only when the `params` change. In the above example no params are required so it will only be fetched once.
+
+`useEndpoint` also returns a `refetch` function which can be called imperatively to refetch the endpoint with the last used params and body. This is useful for refreshing data.
+
+```typescript
+const { response, refetch } = useEndpoint(getTodosEndpoint, {});
+```
+
+`useEndpoint` also returns the loading state of the request, as well as an `error` if there is one.
+
+```tsx
+const TodoApp = () => {
+  const { response } = useEndpoint(getTodosEndpoint, {});
+  const { response, loading, error } = useEndpoint(getTodosEndpoint, {});
+
+  if (loading) {
+    return <Spinner />;
+  }
+
+  if (error) {
+    return <div>Something went wrong!</div>;
+  }
+
+  const todos = response?.body ?? [];
+
+  return (
+    <ul>
+      {todos.map((todo) => (
+        <li key={todo.id}>{todo.title}</li>
+      ))}
+    </ul>
+  );
+};
+```
+
+### useEndpointLazily hook
+
+`useEndpointLazily` is just like `useEndpoint` except that it does not immediately fetch the endpoint, instead it provides a `fetch` function to let you fetch the given endpoint on demand.
+
+<p class="filename" data-filename="./newTodoInput.tsx"></p>
+
+```tsx
+import React from 'react';
+import { useEndpointLazily } from '@typepoint/react';
+import { addTodoEndpoint } from '../shared/endpoints/addTodoEndpoint';
+
+/**
+ * Component which can create a new todo.
+ */
+const NewTodoInput = () => {
+  const [title, setTitle] = useState('');
+
+  const { fetch: addTodo } = useEndpointLazily(addTodoEndpoint);
+
+  const addTodoWithTitle = useCallback((title: string) => {
+    addTodo({ body: { title } });
+  }, [addTodo]);
+
+  return (
+    <div>
+      <input type="text" value=>
+      <button type="button" onClick={addTodoWithTitle}>Add</button>
+    </div>
+  );
+};
+
+export default TodoApp;
 ```
 
 ## Examples
 
-Check out the [examples repository](https://github.com/typepoint/examples) for examples on using TypePoint.
+Check out the [examples repository](https://github.com/typepoint/examples) for example apps that use TypePoint.
+
+- [Todo app using Express & React](https://github.com/typepoint/examples/tree/master/todos-react-hooks-express)
+- [Todo app using Next.js & React](https://github.com/typepoint/examples/tree/master/todos-nextjs)
 
 ## Contributing
 
-Got an problem or suggestion? Submit an [issue](https://github.com/typepoint/typepoint/issues)!
+Got a problem or suggestion? Submit an [issue](https://github.com/typepoint/typepoint/issues)!
 
-Want to contribute? Fork the [repository](https://github.com/typepoint/typepoint) and submit a pull request! 😸
+Want to contribute? Fork the [repository](https://github.com/typepoint/typepoint) and submit a pull request! 🌩
