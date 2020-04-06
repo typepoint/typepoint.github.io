@@ -329,7 +329,9 @@
     </script>
     <script src="//unpkg.com/docsify/lib/docsify.min.js"></script>
     <script src="//unpkg.com/docsify/lib/plugins/search.min.js"></script>
+    <script src="//unpkg.com/prismjs/components/prism-jsx.min.js"></script>
     <script src="//unpkg.com/prismjs/components/prism-typescript.min.js"></script>
+    <script src="//unpkg.com/prismjs/components/prism-tsx.min.js"></script>
     <script src="//unpkg.com/prismjs/components/prism-bash.min.js"></script>
     <script>
       const searchFor = (selector, callback) => {
@@ -352,14 +354,14 @@
           }
         };
 
-        images.forEach(image => {
+        images.forEach((image) => {
           const img = new Image();
           img.src = image.src;
           img.onload = imageLoaded;
         });
       };
 
-      searchFor('.hero-logo img', images => {
+      searchFor('.hero-logo img', (images) => {
         const image = new Image();
         waitUntilImagesLoaded(images, () => {
           const hero = document.querySelector('.hero');
